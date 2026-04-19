@@ -11,7 +11,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="memopt",
-    version="1.0.0",
+    version="1.0.1",
     author="memopt Team",
     author_email="memopt@example.com",
     description="高性能内存优化工具包",
