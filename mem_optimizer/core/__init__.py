@@ -1,0 +1,106 @@
+"""
+mem_optimizer 核心模块
+
+提供核心类和接口。
+"""
+
+from .base import (
+    AllocatorType,
+    AllocationStrategy,
+    MemoryRegionState,
+    MemoryBlock,
+    AllocationRequest,
+    AllocationResult,
+    MemoryStatistics,
+    AllocatorBase,
+    StrategySelectorBase,
+    DefragmenterBase,
+    NUMACoordinatorBase
+)
+from .config import (
+    AllocatorConfig,
+    BuddyAllocatorConfig,
+    SlabAllocatorConfig,
+    TLSFAllocatorConfig,
+    DefragConfig,
+    NUMAConfig,
+    RLSelectorConfig,
+    BanditConfig,
+    MonitorConfig,
+    OptimizerConfig,
+    DefragPolicy,
+    NUMAPolicy
+)
+from .exceptions import (
+    MemOptimizerError,
+    AllocationError,
+    OutOfMemoryError,
+    FragmentationError,
+    DefragmentationError,
+    NUMAError,
+    NUMANotAvailableError,
+    NUMAMigrationError,
+    ConfigurationError,
+    AllocatorError,
+    AllocatorNotInitializedError,
+    InvalidBlockError,
+    BlockNotFoundError,
+    DoubleFreeError,
+    CorruptionError,
+    IntegrationError,
+    MonitorError,
+    PSIError,
+    StrategyError,
+    RLTrainingError,
+    BanditError
+)
+from .memory_pool import MemoryPool, PoolSnapshot
+
+__all__ = [
+    'AllocatorType',
+    'AllocationStrategy',
+    'MemoryRegionState',
+    'MemoryBlock',
+    'AllocationRequest',
+    'AllocationResult',
+    'MemoryStatistics',
+    'AllocatorBase',
+    'StrategySelectorBase',
+    'DefragmenterBase',
+    'NUMACoordinatorBase',
+    'AllocatorConfig',
+    'BuddyAllocatorConfig',
+    'SlabAllocatorConfig',
+    'TLSFAllocatorConfig',
+    'DefragConfig',
+    'NUMAConfig',
+    'RLSelectorConfig',
+    'BanditConfig',
+    'MonitorConfig',
+    'OptimizerConfig',
+    'DefragPolicy',
+    'NUMAPolicy',
+    'MemOptimizerError',
+    'AllocationError',
+    'OutOfMemoryError',
+    'FragmentationError',
+    'DefragmentationError',
+    'NUMAError',
+    'NUMANotAvailableError',
+    'NUMAMigrationError',
+    'ConfigurationError',
+    'AllocatorError',
+    'AllocatorNotInitializedError',
+    'InvalidBlockError',
+    'BlockNotFoundError',
+    'DoubleFreeError',
+    'CorruptionError',
+    'IntegrationError',
+    'MonitorError',
+    'PSIError',
+    'StrategyError',
+    'RLTrainingError',
+    'BanditError',
+    'MemoryPool',
+    'PoolSnapshot'
+]
