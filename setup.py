@@ -10,7 +10,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="memopt",
+    name="memopt-tool",
     version="1.0.1",
     author="memopt Team",
     author_email="1741548594@qq.com",
