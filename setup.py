@@ -13,11 +13,11 @@ setup(
     name="memopt",
     version="1.0.1",
     author="memopt Team",
-    author_email="memopt@example.com",
+    author_email="1741548594@qq.com",
     description="高性能内存优化工具包",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/memopt/memopt",
+    url="https://github.com/chenlong548/memopt",
     packages=find_packages(exclude=["tests*", "benchmarks*", "docs*"]),
     classifiers=[
         "Development Status :: 4 - Beta",
