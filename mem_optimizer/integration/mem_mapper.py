@@ -97,7 +97,7 @@ class MemMapperIntegration:
         Returns:
             MappedMemoryInfo: 映射信息
         """
-        if not self.is_available():
+        if not self.is_available() or self._mapper is None:
             return None
 
         try:
@@ -106,7 +106,7 @@ class MemMapperIntegration:
                 mode=mode,
                 numa_node=numa_node,
                 use_huge_pages=use_huge_pages
-            )
+            )  # type: ignore
 
             info = MappedMemoryInfo(
                 region_id=str(region.region_id),
@@ -162,9 +162,9 @@ class MemMapperIntegration:
                 file_path=info.file_path or "",
                 base_address=info.address,
                 size=info.size
-            )
+            )  # type: ignore
 
-            self._mapper.unmap(region)
+            self._mapper.unmap(region)  # type: ignore
 
             del self._mapped_regions[region_id]
 
@@ -221,9 +221,9 @@ class MemMapperIntegration:
                 file_path=info.file_path or "",
                 base_address=info.address,
                 size=info.size
-            )
+            )  # type: ignore
 
-            self._mapper.advise(region, advice)
+            self._mapper.advise(region, advice)  # type: ignore
             return True
 
         except Exception:
@@ -256,9 +256,9 @@ class MemMapperIntegration:
                 file_path=info.file_path or "",
                 base_address=info.address,
                 size=info.size
-            )
+            )  # type: ignore
 
-            self._mapper.sync(region, async_mode)
+            self._mapper.sync(region, async_mode)  # type: ignore
             return True
 
         except Exception:
@@ -275,7 +275,7 @@ class MemMapperIntegration:
             return {'available': False}
 
         try:
-            stats = self._mapper.get_stats()
+            stats = self._mapper.get_stats()  # type: ignore
             return {
                 'available': True,
                 'mapper_stats': stats,

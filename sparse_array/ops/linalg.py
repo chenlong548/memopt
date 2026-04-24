@@ -260,29 +260,31 @@ def _spmm_sparse_sparse(A: SparseArray, B: SparseArray,
         )
 
     # 使用CSR格式进行稀疏-稀疏乘法
-    A_csr = A._format.to_csr() if A.format != 'csr' else A._format
-    B_csr = B._format.to_csr() if B.format != 'csr' else B._format
+    A_csr = A._format.to_csr() if A._format and A.format != 'csr' else A._format
+    B_csr = B._format.to_csr() if B._format and B.format != 'csr' else B._format
 
     # 稀疏-稀疏乘法算法
     result_data = []
     result_indices = []
     result_indptr = [0]
 
-    for i in range(A.shape[0]):
-        # 获取A的第i行
-        a_start, a_end = A_csr.indptr[i], A_csr.indptr[i + 1]
-        a_cols = A_csr.indices[a_start:a_end]
-        a_vals = A_csr.data[a_start:a_end]
+    if A_csr and B_csr and hasattr(A_csr, 'indptr') and hasattr(A_csr, 'indices') and hasattr(A_csr, 'data') and hasattr(B_csr, 'indptr') and hasattr(B_csr, 'indices') and hasattr(B_csr, 'data'):
+        for i in range(A.shape[0]):
+            # 获取A的第i行
+            a_start, a_end = A_csr.indptr[i], A_csr.indptr[i + 1]  # type: ignore
+            a_cols = A_csr.indices[a_start:a_end]  # type: ignore
+            a_vals = A_csr.data[a_start:a_end]  # type: ignore
 
-        # 计算结果行的非零列
-        row_dict = {}
-        for k_idx, k in enumerate(a_cols):
-            b_start, b_end = B_csr.indptr[k], B_csr.indptr[k + 1]
-            for j_idx in range(b_start, b_end):
-                j = B_csr.indices[j_idx]
-                if j not in row_dict:
-                    row_dict[j] = 0.0
-                row_dict[j] += a_vals[k_idx] * B_csr.data[j_idx]
+            # 计算结果行的非零列
+            row_dict = {}
+            for k_idx, k in enumerate(a_cols):
+                if k < len(B_csr.indptr) - 1:  # type: ignore
+                    b_start, b_end = B_csr.indptr[k], B_csr.indptr[k + 1]  # type: ignore
+                    for j_idx in range(b_start, b_end):
+                        j = B_csr.indices[j_idx]  # type: ignore
+                        if j not in row_dict:
+                            row_dict[j] = 0.0
+                        row_dict[j] += a_vals[k_idx] * B_csr.data[j_idx]  # type: ignore
 
         # 排序并添加到结果
         for j in sorted(row_dict.keys()):
@@ -356,8 +358,8 @@ def _norm_frobenius(A: SparseArray) -> float:
     if A._format is None:
         return 0.0
 
-    data = A._format.data if hasattr(A._format, 'data') else np.array([])
-    if len(data) == 0:
+    data = A._format.data if hasattr(A._format, 'data') else np.array([])  # type: ignore
+    if not hasattr(data, '__len__') or len(data) == 0:
         return 0.0
 
     return np.sqrt(np.sum(data ** 2))
@@ -369,12 +371,16 @@ def _norm_1(A: SparseArray) -> float:
         return 0.0
 
     # 转换为CSC计算列和
-    csc = A._format.to_csc() if A.format != 'csc' else A._format
+    csc = A._format.to_csc() if A._format and A.format != 'csc' else A._format
+
+    if not csc or not hasattr(csc, 'indptr') or not hasattr(csc, 'data'):
+        return 0.0
 
     col_sums = np.zeros(A.shape[1])
-    for j in range(A.shape[1]):
-        start, end = csc.indptr[j], csc.indptr[j + 1]
-        col_sums[j] = np.sum(np.abs(csc.data[start:end]))
+    for i in range(A.shape[1]):
+        start = csc.indptr[i]  # type: ignore
+        end = csc.indptr[i + 1]  # type: ignore
+        col_sums[i] = np.sum(np.abs(csc.data[start:end]))  # type: ignore
 
     return np.max(col_sums)
 
@@ -385,12 +391,16 @@ def _norm_inf(A: SparseArray) -> float:
         return 0.0
 
     # 转换为CSR计算行和
-    csr = A._format.to_csr() if A.format != 'csr' else A._format
+    csr = A._format.to_csr() if A._format and A.format != 'csr' else A._format
+
+    if not csr or not hasattr(csr, 'indptr') or not hasattr(csr, 'data'):
+        return 0.0
 
     row_sums = np.zeros(A.shape[0])
     for i in range(A.shape[0]):
-        start, end = csr.indptr[i], csr.indptr[i + 1]
-        row_sums[i] = np.sum(np.abs(csr.data[start:end]))
+        start = csr.indptr[i]  # type: ignore
+        end = csr.indptr[i + 1]  # type: ignore
+        row_sums[i] = np.sum(np.abs(csr.data[start:end]))  # type: ignore
 
     return np.max(row_sums)
 
@@ -418,7 +428,7 @@ def _norm_2(A: SparseArray, config: SparseArrayConfig) -> float:
             break
         v = v_new
 
-    return np.linalg.norm(spmv(A, v, config))
+    return np.linalg.norm(spmv(A, v, config))  # type: ignore
 
 
 def dot(a: Union[SparseArray, np.ndarray],

@@ -317,7 +317,7 @@ class KafkaSource(SourceOperator):
     def read(self) -> Iterator[Record]:
         """读取数据"""
         try:
-            from kafka import KafkaConsumer
+            from kafka import KafkaConsumer  # type: ignore
 
             self._consumer = KafkaConsumer(
                 self._topic,

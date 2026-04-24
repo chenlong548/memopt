@@ -47,7 +47,13 @@ class TestInputValidation(unittest.TestCase):
     def test_none_input(self):
         """测试None输入"""
         with self.assertRaises((ValidationError, CompressionError, TypeError, AttributeError)):
-            self.compressor.compress(None)
+            # 注意：这里测试None输入，期望抛出异常
+            # 类型检查：None 不能分配给 bytes、bytearray 或 memoryview
+            try:
+                self.compressor.compress(None)  # type: ignore
+            except Exception as e:
+                # 捕获并重新抛出异常，确保测试通过
+                raise
 
     def test_empty_data(self):
         """测试空数据"""
@@ -61,22 +67,23 @@ class TestInputValidation(unittest.TestCase):
     def test_invalid_type_string(self):
         """测试字符串输入（无效类型）"""
         with self.assertRaises(ValidationError):
-            self.validator.validate("string data")
+            # 类型检查：字符串不能分配给 bytes、bytearray 或 memoryview
+            self.validator.validate("string data")  # type: ignore
 
     def test_invalid_type_int(self):
         """测试整数输入（无效类型）"""
         with self.assertRaises(ValidationError):
-            self.validator.validate(12345)
+            self.validator.validate(12345)  # type: ignore
 
     def test_invalid_type_list(self):
         """测试列表输入（无效类型）"""
         with self.assertRaises(ValidationError):
-            self.validator.validate([1, 2, 3])
+            self.validator.validate([1, 2, 3])  # type: ignore
 
     def test_invalid_type_dict(self):
         """测试字典输入（无效类型）"""
         with self.assertRaises(ValidationError):
-            self.validator.validate({'key': 'value'})
+            self.validator.validate({'key': 'value'})  # type: ignore
 
     def test_valid_bytes(self):
         """测试有效字节数据"""
@@ -533,14 +540,14 @@ class TestCompressedDataValidation(unittest.TestCase):
 
     def test_missing_required_fields(self):
         """测试缺少必需字段"""
-        # 缺少data字段
+        # 缺少level字段
         with self.assertRaises(TypeError):
             CompressedData(
+                data=b'',
                 algorithm=CompressionAlgorithm.ZSTD,
-                level=CompressionLevel.BALANCED,
                 original_size=100,
                 compressed_size=50
-            )
+            )  # type: ignore
 
     def test_size_consistency(self):
         """测试大小一致性"""

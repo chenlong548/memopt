@@ -13,15 +13,13 @@ from ..core.exceptions import OperatorError
 try:
     from mem_mapper import (
         MemoryMapper,
-        MemoryRegion,
-        MemoryPolicy,
     )
     HAS_MEM_MAPPER = True
 except ImportError:
     HAS_MEM_MAPPER = False
     MemoryMapper = None
-    MemoryRegion = None
-    MemoryPolicy = None
+    MemoryRegion = None  # type: ignore
+    MemoryPolicy = None  # type: ignore
 
 
 logger = logging.getLogger(__name__)
@@ -61,7 +59,7 @@ class MemoryIntegration:
             config: 内存集成配置
         """
         self._config = config or MemoryIntegrationConfig()
-        self._mapper: Optional[MemoryMapper] = None
+        self._mapper: Optional[MemoryMapper] = None  # type: ignore
         self._regions: Dict[str, Any] = {}
 
         if HAS_MEM_MAPPER:
@@ -70,7 +68,7 @@ class MemoryIntegration:
     def _init_mapper(self):
         """初始化内存映射器"""
         try:
-            self._mapper = MemoryMapper()
+            self._mapper = MemoryMapper()  # type: ignore
             logger.info("Memory integration initialized successfully")
         except Exception as e:
             logger.warning(f"Failed to initialize memory integration: {e}")
@@ -211,7 +209,6 @@ class BufferPool:
 
         self._buffers: list = []
         self._available: list = []
-        self._lock = None
 
         import threading
         self._lock = threading.Lock()

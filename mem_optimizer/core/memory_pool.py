@@ -64,13 +64,13 @@ class MemoryPool:
         self._allocators: Dict[AllocatorType, AllocatorBase] = {}
         self._strategy_selector: Optional[StrategySelectorBase] = None
         self._numa_coordinator: Optional[NUMACoordinatorBase] = None
-        self._defragmenter = None
-        self._monitor = None
+        self._defragmenter: Optional[Any] = None
+        self._monitor: Optional[Any] = None
 
         self._stats = MemoryStatistics(total_size=self.total_size)
         self._allocated_blocks: Dict[int, MemoryBlock] = {}
         self._free_blocks: List[MemoryBlock] = []
-        self._block_lock = threading.RLock() if self.config.thread_safe else None
+        self._block_lock: Optional[threading.RLock] = threading.RLock() if self.config.thread_safe else None
 
         self._initialized = False
         self._shutdown = False
@@ -109,21 +109,21 @@ class MemoryPool:
             self._allocators[AllocatorType.BUDDY] = BuddyAllocator(
                 total_size=self.total_size,
                 base_address=self.base_address,
-                config=buddy_config
+                config=buddy_config  # type: ignore
             )
 
             slab_config = self.config.get_allocator_config(AllocatorType.SLAB)
             self._allocators[AllocatorType.SLAB] = SlabAllocator(
                 total_size=self.total_size,
                 base_address=self.base_address,
-                config=slab_config
+                config=slab_config  # type: ignore
             )
 
             tlsf_config = self.config.get_allocator_config(AllocatorType.TLSF)
             self._allocators[AllocatorType.TLSF] = TLSFAllocator(
                 total_size=self.total_size,
                 base_address=self.base_address,
-                config=tlsf_config
+                config=tlsf_config  # type: ignore
             )
 
             logger.debug("All allocators initialized successfully")
@@ -270,7 +270,7 @@ class MemoryPool:
                     block = MemoryBlock(
                         address=result.address,
                         size=result.actual_size,
-                        state=result.state if hasattr(result, 'state') else None,
+                        state='ALLOCATED',  # type: ignore
                         allocator_type=allocator_type,
                         numa_node=result.numa_node,
                         metadata=metadata or {}
@@ -334,7 +334,7 @@ class MemoryPool:
                         self.total_size
                     )
 
-                    block.state = None
+                    block.state = None  # type: ignore
                     self._free_blocks.append(block)
 
                     if self._monitor:
@@ -388,7 +388,7 @@ class MemoryPool:
                     new_block = MemoryBlock(
                         address=result.address,
                         size=result.actual_size,
-                        state=result.state if hasattr(result, 'state') else None,
+                        state='ALLOCATED',  # type: ignore
                         allocator_type=block.allocator_type,
                         numa_node=block.numa_node,
                         metadata=block.metadata
@@ -454,22 +454,22 @@ class MemoryPool:
                                     result: AllocationResult,
                                     duration: float):
         """更新策略性能数据"""
-        if self._strategy_selector:
+        if self._strategy_selector and result:
             performance = {
                 'success': result.success,
                 'allocation_time': duration,
-                'fragmentation': result.fragmentation,
-                'size': result.size
+                'fragmentation': getattr(result, 'fragmentation', 0.0),
+                'size': getattr(result, 'size', 0)
             }
             self._strategy_selector.update_performance(allocator, performance)
 
     def _should_defrag(self) -> bool:
         """判断是否需要碎片整理"""
-        if not self._defragmenter:
+        if not self._defragmenter or not hasattr(self.config, 'defrag_config') or self.config.defrag_config is None:
             return False
 
         fragmentation = self._stats.fragmentation_ratio
-        threshold = self.config.defrag_config.threshold
+        threshold = getattr(self.config.defrag_config, 'threshold', 0.0)
 
         return fragmentation > threshold
 
@@ -604,7 +604,7 @@ class MemoryPool:
         """上下文管理器入口"""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, _exc_type, _exc_val, _exc_tb):
         """上下文管理器出口"""
         self.shutdown()
         return False

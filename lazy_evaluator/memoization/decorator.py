@@ -106,9 +106,9 @@ def memoize(max_size: int = 1000, ttl: Optional[float] = None):
                 if cache_key in cache:
                     del cache[cache_key]
 
-        wrapper.cache_clear = cache_clear
-        wrapper.cache_info = cache_info
-        wrapper.cache_remove = cache_remove
+        wrapper.cache_clear = cache_clear  # type: ignore
+        wrapper.cache_info = cache_info  # type: ignore
+        wrapper.cache_remove = cache_remove  # type: ignore
 
         return wrapper
 

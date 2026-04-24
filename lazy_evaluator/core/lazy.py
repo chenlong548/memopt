@@ -83,6 +83,8 @@ class Lazy(Generic[T]):
             if self._state == ThunkState.EVALUATED:
                 if self._error is not None:
                     raise self._error
+                if self._value is None:
+                    raise LazyEvaluationError("Lazy value is None after evaluation")
                 return self._value
 
             # 正在求值：检查是否是同一线程（循环依赖）
@@ -100,6 +102,8 @@ class Lazy(Generic[T]):
                 # 重新检查状态
                 if self._error is not None:
                     raise self._error
+                if self._value is None:
+                    raise LazyEvaluationError("Lazy value is None after evaluation")
                 return self._value
 
             # 开始求值

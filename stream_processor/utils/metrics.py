@@ -4,7 +4,7 @@ stream_processor 指标收集
 提供性能指标收集功能。
 """
 
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any, Dict, List, Optional, Callable, cast
 from dataclasses import dataclass, field
 from collections import defaultdict
 import time
@@ -282,7 +282,7 @@ class MetricsRegistry:
         with self._lock:
             if key not in self._metrics:
                 self._metrics[key] = Counter(name, tags)
-            return self._metrics[key]
+            return cast(Counter, self._metrics[key])
 
     def gauge(self, name: str, tags: Optional[Dict[str, str]] = None) -> Gauge:
         """
@@ -299,7 +299,7 @@ class MetricsRegistry:
         with self._lock:
             if key not in self._metrics:
                 self._metrics[key] = Gauge(name, tags)
-            return self._metrics[key]
+            return cast(Gauge, self._metrics[key])
 
     def histogram(self, name: str, tags: Optional[Dict[str, str]] = None) -> Histogram:
         """
@@ -316,7 +316,7 @@ class MetricsRegistry:
         with self._lock:
             if key not in self._metrics:
                 self._metrics[key] = Histogram(name, tags)
-            return self._metrics[key]
+            return cast(Histogram, self._metrics[key])
 
     def meter(self, name: str, tags: Optional[Dict[str, str]] = None) -> Meter:
         """
@@ -333,7 +333,7 @@ class MetricsRegistry:
         with self._lock:
             if key not in self._metrics:
                 self._metrics[key] = Meter(name, tags)
-            return self._metrics[key]
+            return cast(Meter, self._metrics[key])
 
     def _make_key(self, name: str, tags: Optional[Dict[str, str]]) -> str:
         """生成键"""

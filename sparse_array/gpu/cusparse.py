@@ -23,11 +23,11 @@ _CUSPARSE_AVAILABLE = False
 _CUPY_AVAILABLE = False
 
 try:
-    import cupy as cp
+    import cupy as cp  # type: ignore
     _CUPY_AVAILABLE = True
     try:
-        from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
-        from cupyx.scipy.sparse.linalg import spmv as cp_spmv
+        from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix  # type: ignore
+        from cupyx.scipy.sparse.linalg import spmv as cp_spmv  # type: ignore
         _CUSPARSE_AVAILABLE = True
     except ImportError:
         pass
@@ -95,14 +95,14 @@ def cusparse_spmv(A: SparseArray,
         )
 
     # 转换为CSR格式
-    csr = A._format.to_csr() if A.format != 'csr' else A._format
+    csr = A._format.to_csr() if A.format != 'csr' else A._format  # type: ignore
 
     # 传输数据到GPU
     try:
         # 创建CuPy CSR矩阵
-        data_gpu = cp.array(csr.data)
-        indices_gpu = cp.array(csr.indices)
-        indptr_gpu = cp.array(csr.indptr)
+        data_gpu = cp.array(csr.data)  # type: ignore
+        indices_gpu = cp.array(csr.indices)  # type: ignore
+        indptr_gpu = cp.array(csr.indptr)  # type: ignore
 
         cp_csr = cp_csr_matrix(
             (data_gpu, indices_gpu, indptr_gpu),
@@ -150,13 +150,13 @@ def cusparse_spmm(A: SparseArray,
         )
 
     # 转换为CSR格式
-    csr = A._format.to_csr() if A.format != 'csr' else A._format
+    csr = A._format.to_csr() if A.format != 'csr' else A._format  # type: ignore
 
     try:
         # 创建CuPy CSR矩阵
-        data_gpu = cp.array(csr.data)
-        indices_gpu = cp.array(csr.indices)
-        indptr_gpu = cp.array(csr.indptr)
+        data_gpu = cp.array(csr.data)  # type: ignore
+        indices_gpu = cp.array(csr.indices)  # type: ignore
+        indptr_gpu = cp.array(csr.indptr)  # type: ignore
 
         cp_csr = cp_csr_matrix(
             (data_gpu, indices_gpu, indptr_gpu),
@@ -204,28 +204,28 @@ def cusparse_spmm_sparse(A: SparseArray,
         )
 
     # 转换为CSR格式
-    A_csr = A._format.to_csr() if A.format != 'csr' else A._format
-    B_csr = B._format.to_csr() if B.format != 'csr' else B._format
+    A_csr = A._format.to_csr() if A.format != 'csr' else A._format  # type: ignore
+    B_csr = B._format.to_csr() if B.format != 'csr' else B._format  # type: ignore
 
     try:
         # 创建CuPy CSR矩阵
-        A_data_gpu = cp.array(A_csr.data)
-        A_indices_gpu = cp.array(A_csr.indices)
-        A_indptr_gpu = cp.array(A_csr.indptr)
+        A_data_gpu = cp.array(A_csr.data)  # type: ignore
+        A_indices_gpu = cp.array(A_csr.indices)  # type: ignore
+        A_indptr_gpu = cp.array(A_csr.indptr)  # type: ignore
 
         A_cp = cp_csr_matrix(
             (A_data_gpu, A_indices_gpu, A_indptr_gpu),
             shape=A.shape
-        )
+        )  # type: ignore
 
-        B_data_gpu = cp.array(B_csr.data)
-        B_indices_gpu = cp.array(B_csr.indices)
-        B_indptr_gpu = cp.array(B_csr.indptr)
+        B_data_gpu = cp.array(B_csr.data)  # type: ignore
+        B_indices_gpu = cp.array(B_csr.indices)  # type: ignore
+        B_indptr_gpu = cp.array(B_csr.indptr)  # type: ignore
 
         B_cp = cp_csr_matrix(
             (B_data_gpu, B_indices_gpu, B_indptr_gpu),
             shape=B.shape
-        )
+        )  # type: ignore
 
         # 执行稀疏-稀疏乘法
         C_cp = A_cp.dot(B_cp)

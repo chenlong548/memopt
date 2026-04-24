@@ -633,7 +633,7 @@ class TestBoundaryConditions(unittest.TestCase):
         
         # 测试非字典输入
         with self.assertRaises(ConfigurationError):
-            MonitorConfig.from_dict("not a dict")
+            MonitorConfig.from_dict("not a dict")  # type: ignore
         
         # 测试无效的名称类型
         with self.assertRaises(ConfigurationError):

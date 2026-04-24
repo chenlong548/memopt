@@ -42,25 +42,31 @@ def to_scipy_sparse(arr: SparseArray, format: Optional[str] = None) -> Any:
     format = format or arr.format
 
     if format == 'csr':
-        csr = arr._format.to_csr() if arr.format != 'csr' else arr._format
-        return sp_sparse.csr_matrix(
-            (csr.data, csr.indices, csr.indptr),
-            shape=arr.shape
-        )
+        if arr._format is not None:
+            csr = arr._format.to_csr() if arr.format != 'csr' else arr._format
+            if csr is not None:
+                return sp_sparse.csr_matrix(
+                    (csr.data, csr.indices, csr.indptr),  # type: ignore
+                    shape=arr.shape
+                )
 
     elif format == 'csc':
-        csc = arr._format.to_csc() if arr.format != 'csc' else arr._format
-        return sp_sparse.csc_matrix(
-            (csc.data, csc.indices, csc.indptr),
-            shape=arr.shape
-        )
+        if arr._format is not None:
+            csc = arr._format.to_csc() if arr.format != 'csc' else arr._format
+            if csc is not None:
+                return sp_sparse.csc_matrix(
+                    (csc.data, csc.indices, csc.indptr),  # type: ignore
+                    shape=arr.shape
+                )
 
     elif format == 'coo':
-        coo = arr._format.to_coo() if arr.format != 'coo' else arr._format
-        return sp_sparse.coo_matrix(
-            (coo.data, (coo.rows, coo.cols)),
-            shape=arr.shape
-        )
+        if arr._format is not None:
+            coo = arr._format.to_coo() if arr.format != 'coo' else arr._format
+            if coo is not None:
+                return sp_sparse.coo_matrix(
+                    (coo.data, (coo.rows, coo.cols)),  # type: ignore
+                    shape=arr.shape
+                )
 
     else:
         # 默认转换为CSR
@@ -183,22 +189,29 @@ class scipy_compat:
     def dot(self, other):
         """矩阵乘法"""
         self._ensure_scipy()
-        result = self._scipy_mat.dot(other)
-        if sp_sparse.issparse(result):
-            return from_scipy_sparse(result)
-        return result
+        if self._scipy_mat is not None:
+            result = self._scipy_mat.dot(other)
+            if sp_sparse.issparse(result):
+                return from_scipy_sparse(result)
+            return result
+        return None
 
     def multiply(self, other):
         """元素级乘法"""
         self._ensure_scipy()
-        result = self._scipy_mat.multiply(other)
-        if sp_sparse.issparse(result):
-            return from_scipy_sparse(result)
-        return result
+        if self._scipy_mat is not None:
+            result = self._scipy_mat.multiply(other)
+            if sp_sparse.issparse(result):
+                return from_scipy_sparse(result)
+            return result
+        return None
 
     def transpose(self):
         """转置"""
-        return from_scipy_sparse(self._scipy_mat.transpose())
+        self._ensure_scipy()
+        if self._scipy_mat is not None:
+            return from_scipy_sparse(self._scipy_mat.transpose())
+        return None
 
     @property
     def T(self):
@@ -237,7 +250,8 @@ def linalg_solve(A: SparseArray, b: np.ndarray,
     from scipy.sparse.linalg import spsolve
 
     A_scipy = to_scipy_sparse(A)
-    return spsolve(A_scipy, b)
+    result = spsolve(A_scipy, b)
+    return np.asarray(result)
 
 
 def linalg_eigsh(A: SparseArray, k: int = 6,

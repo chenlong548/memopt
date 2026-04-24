@@ -104,7 +104,7 @@ class TypeStatistics:
     total_size: int = 0                     # 总大小
     avg_size: float = 0.0                   # 平均大小
     max_size: int = 0                       # 最大大小
-    min_size: int = float('inf')            # 最小大小
+    min_size: float = float('inf')            # 最小大小
 
     # 生命周期统计
     avg_lifetime: float = 0.0               # 平均生命周期
@@ -388,7 +388,7 @@ class LifecycleAnalyzer:
     - 访问热度与生命周期的关联分析
     """
 
-    def __init__(self, config):
+    def __init__(self, config: Any):
         """
         初始化生命周期分析器
 

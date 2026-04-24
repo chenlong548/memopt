@@ -59,12 +59,12 @@ class Memothunk(Generic[T]):
         Returns:
             T: 计算结果
         """
-        if self._evaluated:
+        if self._evaluated and self._value is not None:
             return self._value
 
         with self._lock:
             # 双重检查锁定模式
-            if self._evaluated:
+            if self._evaluated and self._value is not None:
                 return self._value
 
             self._value = self._computation()

@@ -177,7 +177,7 @@ class Visualizer:
                     config: ChartConfig) -> Optional[Any]:
         """使用plotly绘图"""
         try:
-            import plotly.graph_objects as go
+            import plotly.graph_objects as go  # type: ignore
 
             fig = go.Figure()
 

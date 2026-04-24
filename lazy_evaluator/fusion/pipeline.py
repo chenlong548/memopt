@@ -4,7 +4,7 @@
 实现惰性管道，支持链式操作。
 """
 
-from typing import Iterable, Callable, Any, List, Optional, TypeVar, Generic, Set
+from typing import Iterable, Callable, Any, List, Optional, TypeVar, Generic, Set, Tuple
 import sys
 from ..core.lazy import Lazy
 from ..core.exceptions import LazyEvaluationError, FusionError
@@ -19,14 +19,14 @@ DEFAULT_MEMORY_LIMIT = 1000000  # 100万元素
 class MemoryLimitExceededError(FusionError):
     """内存限制超出异常"""
     
-    def __init__(self, operation: str = None, limit: int = None):
+    def __init__(self, operation: Optional[str] = None, limit: Optional[int] = None):
         self.limit = limit
-        message = f"Memory limit exceeded"
+        message = "Memory limit exceeded"
         if operation:
             message += f" during {operation}"
         if limit:
             message += f" (limit: {limit} elements)"
-        super().__init__(operation=operation, reason=message)
+        super().__init__(operation=operation or "", reason=message)
 
 
 class LazyPipeline(Generic[T]):
@@ -61,7 +61,7 @@ class LazyPipeline(Generic[T]):
             memory_limit: 内存限制（元素数量），默认100万
         """
         self._source = source
-        self._operations: List[Callable] = []
+        self._operations: List[Tuple[str, Any]] = []
         self._lazy_source: Optional[Lazy] = None
         self._memory_limit = memory_limit
 
@@ -80,7 +80,7 @@ class LazyPipeline(Generic[T]):
             for item in self._execute():
                 yield item
 
-        new_pipeline = LazyPipeline(source_generator(), self._memory_limit)
+        new_pipeline = LazyPipeline[U](source_generator(), self._memory_limit)  # type: ignore
         new_pipeline._operations = [('map', f)]
         return new_pipeline
 
@@ -118,7 +118,7 @@ class LazyPipeline(Generic[T]):
             for item in self._execute():
                 yield item
 
-        new_pipeline = LazyPipeline(source_generator(), self._memory_limit)
+        new_pipeline = LazyPipeline[U](source_generator(), self._memory_limit)  # type: ignore
         new_pipeline._operations = [('flat_map', f)]
         return new_pipeline
 
@@ -353,7 +353,7 @@ class LazyPipeline(Generic[T]):
                 memory_limit = self._memory_limit
                 
                 def distinct_gen(it, limit: int):
-                    seen: Set = set()
+                    seen: Set[T] = set()
                     for item in it:
                         # 检查内存限制
                         if len(seen) >= limit:
@@ -367,11 +367,11 @@ class LazyPipeline(Generic[T]):
                 iterator = distinct_gen(iterator, memory_limit)
 
         # 返回最终的迭代器
-        return iterator
+        return iterator  # type: ignore
 
     def __iter__(self) -> Iterable[T]:
         """返回迭代器"""
-        return self._execute()
+        return self._execute()  # type: ignore
 
     def __repr__(self) -> str:
         """字符串表示"""

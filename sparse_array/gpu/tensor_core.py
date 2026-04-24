@@ -24,7 +24,7 @@ DEFAULT_MAX_CACHE_SIZE = 100  # 默认最大缓存条目数
 _TENSOR_CORE_AVAILABLE = False
 
 try:
-    import cupy as cp
+    import cupy as cp  # type: ignore
     _CUPY_AVAILABLE = True
 
     # 检查计算能力是否支持Tensor Core (>= 7.0)
@@ -125,14 +125,14 @@ def _tensor_core_spmm_bcsr(A: SparseArray,
                            B: np.ndarray,
                            config: SparseArrayConfig) -> np.ndarray:
     """BCSR格式的Tensor Core SpMM"""
-    import cupy as cp
-    from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
+    import cupy as cp  # type: ignore
+    from cupyx.scipy.sparse import csr_matrix  # type: ignore
 
     bcsr = A._format
 
     # 将BCSR转换为密集矩阵进行计算
     # （实际实现中会使用专门的Tensor Core内核）
-    dense_A = bcsr.to_dense()
+    dense_A = bcsr.to_dense()  # type: ignore
 
     try:
         # 传输到GPU

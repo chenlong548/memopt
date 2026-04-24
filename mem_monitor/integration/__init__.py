@@ -76,8 +76,8 @@ class MemOptimizerAdapter:
         self._available = False
 
         try:
-            from mem_optimizer import MemoryOptimizer
-            self._optimizer = MemoryOptimizer
+            from mem_optimizer.core.memory_pool import MemoryPool
+            self._optimizer = MemoryPool
             self._available = True
         except ImportError:
             pass

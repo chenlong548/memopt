@@ -277,7 +277,7 @@ class MemoryMonitor:
         self._stop_time: Optional[float] = None
 
         # 数据存储 - 使用线程安全的数据结构
-        self._history: deque = deque(maxlen=self.config.reporter.history_size)
+        self._history: deque[MemorySnapshot] = deque(maxlen=self.config.reporter.history_size)
         self._alerts: List[Alert] = []
         self._current_snapshot: Optional[MemorySnapshot] = None
         
@@ -299,10 +299,10 @@ class MemoryMonitor:
         self._lock = threading.RLock() if self.config.thread_safe else None
 
         # 组件（延迟初始化）
-        self._sampler = None
+        self._sampler: Optional[Any] = None
         self._analyzers: Dict[str, Any] = {}
-        self._tiering_manager = None
-        self._reporter = None
+        self._tiering_manager: Optional[Any] = None
+        self._reporter: Optional[Any] = None
         self._integrations: Dict[str, Any] = {}
 
         # 弱引用集合（用于追踪对象）- 需要线程安全保护
@@ -913,11 +913,16 @@ class MemoryMonitor:
     def get_stats(self) -> Dict[str, Any]:
         """获取统计信息"""
         with self._data_lock:
-            stats = self._stats.copy()
-            stats['state'] = self._state.value
-            stats['history_size'] = len(self._history)
-            stats['tracked_objects'] = self.get_tracked_count()
-            stats['uptime'] = time.time() - self._start_time if self._start_time else 0
+            stats = {
+                'snapshots_taken': self._stats['snapshots_taken'],
+                'alerts_triggered': self._stats['alerts_triggered'],
+                'hooks_called': self._stats['hooks_called'],
+                'errors': self._stats['errors'],
+                'state': self._state.value,
+                'history_size': len(self._history),
+                'tracked_objects': self.get_tracked_count(),
+                'uptime': int(time.time() - self._start_time) if self._start_time else 0,
+            }
             return stats
 
     def _generate_report(self) -> MonitorReport:

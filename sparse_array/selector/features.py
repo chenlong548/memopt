@@ -277,12 +277,12 @@ def extract_features_from_sparse(arr: SparseArray) -> FormatFeatures:
         # 从CSR格式提取特征
         if arr.format == 'csr':
             csr = arr._format
-            features.max_row_nnz = int(np.max(np.diff(csr.indptr)))
-            features.row_nnz_variance = float(np.var(np.diff(csr.indptr)))
+            features.max_row_nnz = int(np.max(np.diff(csr.indptr)))  # type: ignore
+            features.row_nnz_variance = float(np.var(np.diff(csr.indptr)))  # type: ignore
 
             # 计算带宽
-            rows = np.repeat(np.arange(arr.shape[0]), np.diff(csr.indptr))
-            cols = csr.indices
+            rows = np.repeat(np.arange(arr.shape[0]), np.diff(csr.indptr))  # type: ignore
+            cols = csr.indices  # type: ignore
             if len(cols) > 0:
                 features.bandwidth = int(np.max(np.abs(cols - rows)))
 

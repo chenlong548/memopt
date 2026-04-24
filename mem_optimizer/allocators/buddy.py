@@ -154,6 +154,8 @@ class BuddyAllocator(AllocatorBase):
         """
         while block.order < self.max_order:
             buddy_addr = block.buddy_address
+            if buddy_addr is None:
+                break
             buddy = self._all_blocks.get(buddy_addr)
 
             if buddy is None or not buddy.is_free or buddy.order != block.order:
@@ -211,28 +213,34 @@ class BuddyAllocator(AllocatorBase):
             if block.order > order:
                 block = self._split_block(block, order)
 
-            block.is_free = False
-            self._allocated[block.address] = block
+            if block is not None:
+                block.is_free = False
+                self._allocated[block.address] = block
 
-            self.stats.allocation_count += 1
-            self.stats.used_size += block.size
-            self.stats.free_size -= block.size
+                self.stats.allocation_count += 1
+                self.stats.used_size += block.size
+                self.stats.free_size -= block.size
 
-            if self.stats.used_size > self.stats.peak_usage:
-                self.stats.peak_usage = self.stats.used_size
+                if self.stats.used_size > self.stats.peak_usage:
+                    self.stats.peak_usage = self.stats.used_size
 
-            allocation_time = time.time() - start_time
+                allocation_time = time.time() - start_time
 
-            return AllocationResult(
-                success=True,
-                address=block.address,
-                size=request.size,
-                actual_size=block.size,
-                allocator_type=self.allocator_type,
-                numa_node=request.numa_node,
-                fragmentation=(block.size - request.size) / block.size if block.size > 0 else 0,
-                allocation_time=allocation_time
-            )
+                return AllocationResult(
+                    success=True,
+                    address=block.address,
+                    size=request.size,
+                    actual_size=block.size,
+                    allocator_type=self.allocator_type,
+                    numa_node=request.numa_node,
+                    fragmentation=(block.size - request.size) / block.size if block.size > 0 else 0,
+                    allocation_time=allocation_time
+                )
+            else:
+                return AllocationResult(
+                    success=False,
+                    error_message="Failed to get block"
+                )
 
         except Exception as e:
             return AllocationResult(
@@ -261,7 +269,8 @@ class BuddyAllocator(AllocatorBase):
 
             merged = self._merge_buddies(block)
 
-            self._free_lists[merged.order].append(merged)
+            if merged is not None:
+                self._free_lists[merged.order].append(merged)
 
             self.stats.deallocation_count += 1
             self.stats.used_size -= block.size
@@ -385,15 +394,17 @@ class BuddyAllocator(AllocatorBase):
             for block in free_list:
                 if block.is_free:
                     buddy_addr = block.buddy_address
-                    buddy = self._all_blocks.get(buddy_addr)
+                    if buddy_addr is not None:
+                        buddy = self._all_blocks.get(buddy_addr)
 
-                    if buddy and buddy.is_free and buddy.order == block.order:
-                        self._free_lists[order].remove(block)
-                        self._free_lists[order].remove(buddy)
+                        if buddy and buddy.is_free and buddy.order == block.order:
+                            self._free_lists[order].remove(block)
+                            self._free_lists[order].remove(buddy)
 
-                        merged = self._merge_buddies(block)
-                        self._free_lists[merged.order].append(merged)
-                        merged_count += 1
+                            merged = self._merge_buddies(block)
+                            if merged is not None:
+                                self._free_lists[merged.order].append(merged)
+                                merged_count += 1
 
         self.stats.defragmentation_count += 1
         return merged_count

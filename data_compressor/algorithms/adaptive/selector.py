@@ -261,6 +261,13 @@ class AdaptiveAlgorithmSelector:
                 best_score = score
                 best_algorithm = algorithm
 
+        # 确保总是返回一个算法
+        if best_algorithm is None:
+            if candidates:
+                return random.choice(candidates)
+            else:
+                # 如果没有候选算法，返回默认算法
+                return CompressionAlgorithm.ZSTD
         return best_algorithm
 
     def _adjust_score_by_features(self,

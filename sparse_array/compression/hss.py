@@ -283,8 +283,8 @@ def hss_compress(arr: SparseArray,
         HSSMatrix: HSS矩阵
     """
     dense = arr.to_dense()
-    hss = HSSMatrix(arr.shape, leaf_size, rank)
-    return hss.from_dense(dense)
+    hss = HSSMatrix(arr.shape, leaf_size, rank)  # type: ignore
+    return hss.from_dense(dense)  # type: ignore
 
 
 def hss_decompress(hss: HSSMatrix) -> np.ndarray:

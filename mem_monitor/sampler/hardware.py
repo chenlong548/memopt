@@ -124,10 +124,20 @@ class HardwareSampler(SamplerBase):
             events = self._read_events()
             metrics = self._compute_metrics(events)
 
+            # 确保events是List[Dict[str, Any]]类型
+            event_dicts: List[Dict[str, Any]] = []
+            for e in events:
+                if hasattr(e, '__dict__'):
+                    event_dicts.append(e.__dict__)
+                elif isinstance(e, dict):
+                    event_dicts.append(e)
+                else:
+                    event_dicts.append({})
+            
             data = SampleData(
                 timestamp=time.time(),
                 metrics=metrics,
-                events=[e.__dict__ if hasattr(e, '__dict__') else e for e in events]
+                events=event_dicts
             )
 
             self._add_to_buffer(data)
@@ -137,12 +147,12 @@ class HardwareSampler(SamplerBase):
             self._record_error(e)
             return SampleData(timestamp=time.time())
 
-    def _read_events(self) -> List[MemoryAccessEvent]:
+    def _read_events(self) -> List[Any]:
         """读取事件"""
         # 子类实现
         return []
 
-    def _compute_metrics(self, events: List[MemoryAccessEvent]) -> Dict[str, Any]:
+    def _compute_metrics(self, events: List[Any]) -> Dict[str, Any]:
         """计算指标"""
         if not events:
             return {}
@@ -317,7 +327,7 @@ class PEBSSampler(HardwareSampler):
             self._use_simulation = True
             logger.warning(f"Failed to setup perf event, using simulation mode: {e}")
 
-    def _read_events(self) -> List[MemoryAccessEvent]:
+    def _read_events(self) -> List[Any]:
         """读取PEBS事件"""
         events = []
 
@@ -397,7 +407,7 @@ class IBSSampler(HardwareSampler):
         # 实际实现需要内核模块或perf支持
         pass
 
-    def _read_events(self) -> List[MemoryAccessEvent]:
+    def _read_events(self) -> List[Any]:
         """读取IBS事件"""
         events = []
 
@@ -425,16 +435,26 @@ class IBSSampler(HardwareSampler):
         events = self._simulate_ibs_sample()
         metrics = self._compute_metrics(events)
 
+        # 确保events是List[Dict[str, Any]]类型
+        event_dicts: List[Dict[str, Any]] = []
+        for e in events:
+            if hasattr(e, '__dict__'):
+                event_dicts.append(e.__dict__)
+            elif isinstance(e, dict):
+                event_dicts.append(e)
+            else:
+                event_dicts.append({})
+        
         data = SampleData(
             timestamp=time.time(),
             metrics=metrics,
-            events=[e.__dict__ if hasattr(e, '__dict__') else e for e in events]
+            events=event_dicts
         )
 
         self._add_to_buffer(data)
         return data
 
-    def _simulate_ibs_sample(self) -> List[MemoryAccessEvent]:
+    def _simulate_ibs_sample(self) -> List[Any]:
         """模拟IBS采样（用于不支持IBS的环境）"""
         # 返回空列表，实际实现需要真实的IBS支持
         return []
@@ -459,7 +479,7 @@ class IntelPTSampler(HardwareSampler):
         # 配置PT追踪
         pass
 
-    def _read_events(self) -> List[MemoryAccessEvent]:
+    def _read_events(self) -> List[Any]:
         """从PT追踪数据中提取内存事件"""
         # 解析PT数据包，提取内存访问信息
         return []

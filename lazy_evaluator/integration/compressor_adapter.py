@@ -33,8 +33,8 @@ class CompressorAdapter:
         self._compressor = None
         try:
             # 尝试导入data_compressor模块
-            from data_compressor import Compressor
-            self._compressor = Compressor
+            from data_compressor import DataCompressor
+            self._compressor = DataCompressor
         except ImportError:
             pass
 
@@ -63,9 +63,16 @@ class CompressorAdapter:
                 # 如果compressor不可用，返回原始数据
                 return data
 
-            compressor = self._compressor()
-            if hasattr(compressor, 'compress'):
-                return compressor.compress(data, algorithm=algorithm)
+            if self._compressor:
+                compressor = self._compressor()
+                if hasattr(compressor, 'compress'):
+                    from data_compressor.core.base import CompressionConfig, CompressionAlgorithm
+                    config = CompressionConfig(
+                        algorithm=CompressionAlgorithm(algorithm)
+                    )
+                    return compressor.compress(data, config)
+                else:
+                    return data
             else:
                 return data
 
@@ -86,9 +93,12 @@ class CompressorAdapter:
                 # 如果compressor不可用，返回原始数据
                 return compressed_data
 
-            compressor = self._compressor()
-            if hasattr(compressor, 'decompress'):
-                return compressor.decompress(compressed_data)
+            if self._compressor:
+                compressor = self._compressor()
+                if hasattr(compressor, 'decompress'):
+                    return compressor.decompress(compressed_data)
+                else:
+                    return compressed_data
             else:
                 return compressed_data
 
@@ -107,7 +117,7 @@ class CompressorAdapter:
         """
         return Lazy(lambda: self.lazy_compress(data, algorithm).get())
 
-    def create_compressed_cache(self, max_size: int = 100) -> Dict:
+    def create_compressed_cache(self, max_size: int = 100) -> Any:
         """
         创建压缩缓存
 
@@ -115,7 +125,7 @@ class CompressorAdapter:
             max_size: 最大缓存大小
 
         Returns:
-            Dict: 缓存字典
+            Any: 压缩缓存对象
         """
         from ..memoization.lru_cache import LRUCache
 

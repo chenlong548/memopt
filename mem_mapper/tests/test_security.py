@@ -46,27 +46,31 @@ class TestPathValidator(unittest.TestCase):
         """测试空路径"""
         is_valid, _, error = self.validator.validate_path("")
         self.assertFalse(is_valid)
-        self.assertIn("empty", error.lower())
+        self.assertIsNotNone(error)
+        self.assertIn("empty", error.lower() if error else "")
     
     def test_null_byte_injection(self):
         """测试空字节注入"""
         is_valid, _, error = self.validator.validate_path("/tmp/test\x00file.txt")
         self.assertFalse(is_valid)
-        self.assertIn("null byte", error.lower())
+        self.assertIsNotNone(error)
+        self.assertIn("null byte", error.lower() if error else "")
     
     def test_path_traversal(self):
         """测试路径遍历攻击"""
         # 测试 ../ 遍历
         is_valid, _, error = self.validator.validate_path("../../../etc/passwd")
         self.assertFalse(is_valid)
-        self.assertIn("traversal", error.lower())
+        self.assertIsNotNone(error)
+        self.assertIn("traversal", error.lower() if error else "")
     
     def test_max_path_length(self):
         """测试最大路径长度"""
         long_path = "/tmp/" + "a" * 5000
         is_valid, _, error = self.validator.validate_path(long_path)
         self.assertFalse(is_valid)
-        self.assertIn("length", error.lower())
+        self.assertIsNotNone(error)
+        self.assertIn("length", error.lower() if error else "")
     
     @pytest.mark.skipif(
         sys.platform == 'win32',
@@ -87,7 +91,8 @@ class TestPathValidator(unittest.TestCase):
             
             is_valid, _, error = validator.validate_path(temp_link)
             self.assertFalse(is_valid)
-            self.assertIn("symbolic link", error.lower())
+            self.assertIsNotNone(error)
+            self.assertIn("symbolic link", error.lower() if error else "")
             
         finally:
             if os.path.exists(temp_link):
@@ -116,7 +121,8 @@ class TestPathValidator(unittest.TestCase):
             disallowed_file = "/tmp/test.txt"
             is_valid, _, error = validator.validate_path(disallowed_file)
             self.assertFalse(is_valid)
-            self.assertIn("not in allowed", error.lower())
+            self.assertIsNotNone(error)
+            self.assertIn("not in allowed", error.lower() if error else "")
             
         finally:
             import shutil
@@ -189,14 +195,14 @@ class TestResourceLimiter(unittest.TestCase):
         large_size = 2 * 1024 * 1024  # 2MB
         is_allowed, error = self.limiter.check_mapping_limit(large_size, 0, 0)
         self.assertFalse(is_allowed)
-        self.assertIn("exceeds maximum", error.lower())
+        self.assertIn("exceeds maximum", error.lower() if error else "")
     
     def test_mapping_count_limit(self):
         """测试映射数量限制"""
         # 测试超过数量限制
         is_allowed, error = self.limiter.check_mapping_limit(1024, 100, 0)
         self.assertFalse(is_allowed)
-        self.assertIn("maximum mappings", error.lower())
+        self.assertIn("maximum mappings", error.lower() if error else "")
     
     def test_total_size_limit(self):
         """测试总大小限制"""
@@ -208,7 +214,7 @@ class TestResourceLimiter(unittest.TestCase):
         
         is_allowed, error = self.limiter.check_mapping_limit(new_size, 0, current_total)
         self.assertFalse(is_allowed)
-        self.assertIn("total mapping size", error.lower())
+        self.assertIn("total mapping size", error.lower() if error else "")
     
     def test_allowed_mapping(self):
         """测试允许的映射"""

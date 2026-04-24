@@ -199,6 +199,7 @@ class DataTypeDetector:
             # 采样检查是否为合理的浮点数范围
             try:
                 import struct
+                import math
                 num_floats = min(sample_size // 2, 64)
                 half_floats = struct.unpack(f'{num_floats}e', sample[:num_floats * 2])
 
@@ -208,7 +209,7 @@ class DataTypeDetector:
                     return False
 
                 # 检查数值范围是否合理（模型权重通常在-100到100之间）
-                if not all(-1e6 < f < 1e6 for f in half_floats if not np.isnan(f)):
+                if not all(-1e6 < f < 1e6 for f in half_floats if not math.isnan(f)):
                     return False
             except Exception:
                 return False
@@ -286,7 +287,8 @@ class DataTypeDetector:
                 num_floats = sample_size // 4
                 floats = struct.unpack(f'{num_floats}f', sample[:num_floats * 4])
 
-                valid_floats = [f for f in floats if not np.isnan(f) and not np.isinf(f)]
+                import math
+                valid_floats = [f for f in floats if not math.isnan(f) and not math.isinf(f)]
                 if len(valid_floats) > 0:
                     if all(-1e10 < f < 1e10 for f in valid_floats):
                         non_zero = [abs(f) for f in valid_floats if abs(f) > 1e-10]
@@ -297,10 +299,11 @@ class DataTypeDetector:
                                 return DataType.FP32_TENSOR
 
             if data_len % 2 == 0:
+                import math
                 num_halfs = sample_size // 2
                 half_floats = struct.unpack(f'{num_halfs}e', sample[:num_halfs * 2])
                 
-                valid_halfs = [f for f in half_floats if not np.isnan(f) and not np.isinf(f)]
+                valid_halfs = [f for f in half_floats if not math.isnan(f) and not math.isinf(f)]
                 if len(valid_halfs) > 0:
                     if all(-1e10 < f < 1e10 for f in valid_halfs):
                         non_zero = [abs(f) for f in valid_halfs if abs(f) > 1e-10]
@@ -312,9 +315,6 @@ class DataTypeDetector:
                                 if variance < 1e20:
                                     return DataType.BF16_TENSOR
 
-            return DataType.GENERIC
-
-        except Exception:
             return DataType.GENERIC
 
         except Exception:
@@ -403,7 +403,7 @@ class DataTypeDetector:
         zero_count = np.count_nonzero(arr == 0)
         sparsity = zero_count / arr.size
 
-        return sparsity > threshold
+        return bool(sparsity > threshold)
 
     def _estimate_sparsity(self, data: Union[bytes, bytearray, memoryview]) -> float:
         """估计数据稀疏度"""

@@ -173,7 +173,7 @@ class TestArithmeticOperations(unittest.TestCase):
         result = sum(self.sparse)
         expected = np.sum(self.dense)
 
-        self.assertAlmostEqual(result, expected, places=5)
+        self.assertAlmostEqual(result, float(expected), places=5)  # type: ignore
 
 
 class TestLinearAlgebra(unittest.TestCase):
@@ -202,7 +202,7 @@ class TestLinearAlgebra(unittest.TestCase):
         result = spmm(self.sparse, B)
         expected = self.dense @ B
 
-        np.testing.assert_array_almost_equal(result, expected, decimal=5)
+        np.testing.assert_array_almost_equal(result, expected, decimal=5)  # type: ignore
 
     def test_matmul_operator(self):
         """测试矩阵乘法运算符"""
@@ -211,7 +211,7 @@ class TestLinearAlgebra(unittest.TestCase):
         result = self.sparse @ x
         expected = self.dense @ x
 
-        np.testing.assert_array_almost_equal(result, expected, decimal=5)
+        np.testing.assert_array_almost_equal(result, expected, decimal=5)  # type: ignore
 
     def test_transpose(self):
         """测试转置"""
@@ -351,7 +351,7 @@ class TestShapeValidation(unittest.TestCase):
     def test_invalid_shape_none(self):
         """测试shape为None"""
         with self.assertRaises(ValueError):
-            SparseArray(shape=None)
+            SparseArray(shape=None)  # type: ignore
 
     def test_invalid_shape_empty(self):
         """测试shape为空元组"""
@@ -371,7 +371,7 @@ class TestShapeValidation(unittest.TestCase):
     def test_invalid_shape_non_integer(self):
         """测试shape包含非整数"""
         with self.assertRaises(ValueError):
-            SparseArray(shape=(10.5, 10))
+            SparseArray(shape=(10.5, 10))  # type: ignore
 
     def test_valid_shape(self):
         """测试有效的shape"""

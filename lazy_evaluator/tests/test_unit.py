@@ -688,7 +688,7 @@ class TestIncrementalEvaluator(unittest.TestCase):
             return value_a[0]
 
         def compute_b():
-            return evaluator.get_value("A") * 2
+            return evaluator.get_value("A") * 2  # type: ignore
 
         graph = DependencyGraph()
         graph.add_node("A", compute_a)

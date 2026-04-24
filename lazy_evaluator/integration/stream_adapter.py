@@ -4,9 +4,12 @@ Stream Processor适配器模块
 提供与stream_processor模块的集成适配器。
 """
 
-from typing import Any, Callable, Optional, Dict
+from typing import Any, Callable, Optional, Dict, Iterable, TypeVar, Generic, List
 import sys
 import os
+
+T = TypeVar('T')
+U = TypeVar('U')
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
@@ -47,7 +50,7 @@ class StreamAdapter:
         """
         return self._stream_processor is not None
 
-    def create_lazy_stream(self, source: Any) -> LazyPipeline:
+    def create_lazy_stream(self, source: Iterable[T]) -> LazyPipeline[T]:
         """
         创建惰性流
 
@@ -59,7 +62,7 @@ class StreamAdapter:
         """
         return LazyPipeline(source)
 
-    def from_stream_processor(self, stream: Any) -> LazyPipeline:
+    def from_stream_processor(self, stream: Iterable[T]) -> LazyPipeline[T]:
         """
         从stream_processor的Stream创建LazyPipeline
 
@@ -88,9 +91,9 @@ class StreamAdapter:
         if not self.is_available():
             raise RuntimeError("stream_processor module is not available")
 
-        # 收集结果并创建Stream
-        result = pipeline.collect()
-        return self._stream_processor(result)
+        # 直接使用stream_processor包装pipeline，保持惰性计算
+        if self._stream_processor is not None:
+            return self._stream_processor(pipeline)  # type: ignore
 
     def lazy_transform(self, source: Any, transform_func: Callable) -> Lazy:
         """
@@ -105,7 +108,7 @@ class StreamAdapter:
         """
         return Lazy(lambda: transform_func(source))
 
-    def batch_process(self, source: Any, batch_size: int, process_func: Callable) -> LazyPipeline:
+    def batch_process(self, source: Iterable[T], batch_size: int, process_func: Callable[[List[T]], U]) -> LazyPipeline[U]:
         """
         批量处理
 
@@ -129,7 +132,7 @@ class StreamAdapter:
 
         return LazyPipeline(batch_generator())
 
-    def create_windowed_stream(self, source: Any, window_size: int, step: int = 1) -> LazyPipeline:
+    def create_windowed_stream(self, source: Iterable[T], window_size: int, step: int = 1) -> LazyPipeline[List[T]]:
         """
         创建滑动窗口流
 

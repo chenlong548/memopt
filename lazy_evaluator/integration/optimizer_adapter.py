@@ -34,8 +34,8 @@ class OptimizerAdapter:
         self._thunk_pool = ThunkPool(max_size=50)
         try:
             # 尝试导入mem_optimizer模块
-            from mem_optimizer import MemoryOptimizer
-            self._optimizer = MemoryOptimizer
+            from mem_optimizer import MemoryPool
+            self._optimizer = MemoryPool
         except ImportError:
             pass
 
@@ -88,6 +88,7 @@ class OptimizerAdapter:
                 # 如果optimizer不可用，返回None
                 return None
 
+            assert self._optimizer is not None
             optimizer = self._optimizer()
             if hasattr(optimizer, 'allocate'):
                 memory = optimizer.allocate(size)
@@ -99,7 +100,7 @@ class OptimizerAdapter:
 
         return Lazy(allocate)
 
-    def create_memory_pool(self, pool_size: int = 10, chunk_size: int = 1024) -> Dict:
+    def create_memory_pool(self, pool_size: int = 10, chunk_size: int = 1024) -> Any:
         """
         创建内存池
 
@@ -108,7 +109,7 @@ class OptimizerAdapter:
             chunk_size: 块大小
 
         Returns:
-            Dict: 内存池配置
+            Any: 内存池对象
         """
         from ..thunk.thunk_pool import ThunkPool
 
@@ -170,6 +171,7 @@ class OptimizerAdapter:
         }
 
         if self.is_available():
+            assert self._optimizer is not None
             optimizer = self._optimizer()
             if hasattr(optimizer, 'get_stats'):
                 stats['optimizer_stats'] = optimizer.get_stats()

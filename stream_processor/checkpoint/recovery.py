@@ -29,7 +29,7 @@ class RecoveryResult:
 
     snapshot_id: Optional[str] = None
 
-    recovered_operators: List[str] = None
+    recovered_operators: List[str] = []
 
     recovery_time_ms: float = 0.0
 

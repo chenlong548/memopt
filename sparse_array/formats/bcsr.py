@@ -64,7 +64,8 @@ class BCSRFormat(FormatBase):
             block_size: 块大小 (R, C)
             dtype: 数据类型
         """
-        super().__init__(shape, dtype or data.dtype if len(data) > 0 else np.float64)
+        data_dtype = data.dtype if data.size > 0 else np.float64
+        super().__init__(shape, dtype or data_dtype)  # type: ignore
 
         self._block_size = tuple(block_size)
         self._data = np.asarray(data, dtype=self._dtype)
@@ -181,7 +182,7 @@ class BCSRFormat(FormatBase):
     @property
     def block_size(self) -> Tuple[int, int]:
         """获取块大小"""
-        return self._block_size
+        return self._block_size  # type: ignore
 
     @property
     def nnb(self) -> int:
@@ -295,7 +296,7 @@ class BCSRFormat(FormatBase):
             self._data.copy(),
             self._col_indices.copy(),
             self._row_ptr.copy(),
-            self._block_size,
+            self._block_size,  # type: ignore
             self._dtype
         )
 
@@ -325,7 +326,7 @@ class BCSRFormat(FormatBase):
         """
         # 分析块填充模式
         if self._nnb == 0:
-            return self._block_size
+            return self._block_size  # type: ignore
 
         # 计算平均块填充
         avg_fill = self.get_average_block_fill()

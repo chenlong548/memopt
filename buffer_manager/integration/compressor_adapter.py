@@ -189,14 +189,14 @@ class CompressorAdapter:
         while offset < len(data):
             chunk = data[offset:offset + chunk_size]
             
-            if self._compression_type == CompressionType.ZLIB:
+            if self._compression_type == CompressionType.ZLIB and self._stream_compressor:
                 compressed_chunk = self._stream_compressor.compress(chunk)
                 result.extend(compressed_chunk)
             
             offset += chunk_size
         
         # 根据参数决定是否刷新
-        if flush and self._compression_type == CompressionType.ZLIB:
+        if flush and self._compression_type == CompressionType.ZLIB and self._stream_compressor:
             result.extend(self._stream_compressor.flush())
             # 刷新后重新初始化压缩器
             self._stream_compressor = zlib.compressobj(self._compression_level)
@@ -225,7 +225,7 @@ class CompressorAdapter:
             # GZIP 不支持流式解压，回退到单次解压
             return self.decompress(data)
         
-        if self._compression_type == CompressionType.ZLIB:
+        if self._compression_type == CompressionType.ZLIB and self._stream_decompressor:
             decompressed = self._stream_decompressor.decompress(data)
             
             if flush:

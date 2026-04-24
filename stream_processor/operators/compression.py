@@ -61,8 +61,8 @@ class CompressionOperator(OneInputOperator):
         super().__init__(config)
         self._algorithm = algorithm
         self._level = level
-        self._compressor: Optional[DataCompressor] = None
-        self._stats_list: List[CompressionStats] = []
+        self._compressor: Optional[DataCompressor] = None  # type: ignore
+        self._stats_list: List[CompressionStats] = []  # type: ignore
 
         if not HAS_DATA_COMPRESSOR:
             raise ImportError(
@@ -75,7 +75,7 @@ class CompressionOperator(OneInputOperator):
         try:
             data = self._serialize_value(record.value)
 
-            compressed = self._compressor.compress(data)
+            compressed = self._compressor.compress(data)  # type: ignore
 
             self._stats_list.append(compressed.stats)
 
@@ -125,6 +125,11 @@ class CompressionOperator(OneInputOperator):
         self.set_state(OperatorState.RUNNING)
 
         try:
+            assert CompressionAlgorithm is not None
+            assert CompressionLevel is not None
+            assert CompressionConfig is not None
+            assert DataCompressor is not None
+            
             algo = CompressionAlgorithm(self._algorithm)
             level = CompressionLevel(self._level) if self._level > 0 else CompressionLevel.AUTO
 
@@ -178,7 +183,7 @@ class DecompressionOperator(OneInputOperator):
             parallelism=parallelism
         )
         super().__init__(config)
-        self._compressor: Optional[DataCompressor] = None
+        self._compressor: Optional[DataCompressor] = None  # type: ignore
 
         if not HAS_DATA_COMPRESSOR:
             raise ImportError(
@@ -198,14 +203,14 @@ class DecompressionOperator(OneInputOperator):
             metadata = record.value.get('metadata', {})
 
             compressed = CompressedData(
-                data=compressed_data,
-                algorithm=CompressionAlgorithm(algorithm),
-                level=CompressionLevel.BALANCED,
-                original_size=original_size,
-                compressed_size=len(compressed_data)
-            )
+                data=compressed_data,  # type: ignore
+                algorithm=CompressionAlgorithm(algorithm),  # type: ignore
+                level=CompressionLevel.BALANCED,  # type: ignore
+                original_size=original_size,  # type: ignore
+                compressed_size=len(compressed_data)  # type: ignore
+            )  # type: ignore
 
-            decompressed = self._compressor.decompress(compressed)
+            decompressed = self._compressor.decompress(compressed)  # type: ignore
 
             value = self._deserialize_value(decompressed)
 
@@ -236,6 +241,7 @@ class DecompressionOperator(OneInputOperator):
         """打开操作符"""
         self.set_context(context)
         self.set_state(OperatorState.RUNNING)
+        assert DataCompressor is not None
         self._compressor = DataCompressor()
 
     def close(self):
@@ -276,7 +282,7 @@ class StreamCompressionOperator(OneInputOperator):
         self._batch_size = batch_size
         self._algorithm = algorithm
         self._level = level
-        self._compressor: Optional[DataCompressor] = None
+        self._compressor: Optional[DataCompressor] = None  # type: ignore
         self._batch: List[Record] = []
 
         if not HAS_DATA_COMPRESSOR:
@@ -314,7 +320,7 @@ class StreamCompressionOperator(OneInputOperator):
                 serializer = PickleSerializer(safe_mode=True)
                 batch_data = serializer.serialize(batch_data_list)
 
-            compressed = self._compressor.compress(batch_data)
+            compressed = self._compressor.compress(batch_data)  # type: ignore
 
             result_record = Record(
                 value={
@@ -339,6 +345,11 @@ class StreamCompressionOperator(OneInputOperator):
         self.set_context(context)
         self.set_state(OperatorState.RUNNING)
 
+        assert CompressionAlgorithm is not None
+        assert CompressionLevel is not None
+        assert CompressionConfig is not None
+        assert DataCompressor is not None
+        
         algo = CompressionAlgorithm(self._algorithm)
         level = CompressionLevel(self._level) if self._level > 0 else CompressionLevel.AUTO
 

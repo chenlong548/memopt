@@ -53,7 +53,7 @@ class SPSCQueue:
         Returns:
             下一个索引
         """
-        if self._is_power_of_two:
+        if self._is_power_of_two and self._mask is not None:
             return (index + 1) & self._mask
         return (index + 1) % self._capacity
     

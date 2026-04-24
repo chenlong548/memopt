@@ -405,7 +405,7 @@ class ProcessFunctionOperator(OneInputOperator):
 
     def __init__(self,
                  name: str,
-                 process_func: Callable[[Record, 'ProcessContext'], List[Record]],
+                 process_func: Callable[[Record, 'ProcessContext | None'], List[Record]],
                  parallelism: int = 1):
         """
         初始化处理函数操作符

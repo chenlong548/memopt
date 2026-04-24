@@ -69,7 +69,7 @@ class ThunkPool:
             thunk = self._pool.get_nowait()
             if computation is not None:
                 thunk.set_computation(computation)
-            return thunk
+            return thunk  # type: ignore
         except:
             pass
 
@@ -80,7 +80,7 @@ class ThunkPool:
                 return Memothunk(computation)
             else:
                 # 创建一个默认的空计算函数
-                return Memothunk(lambda: None)
+                return Memothunk(lambda: None)  # type: ignore
 
     def release(self, thunk: Memothunk) -> None:
         """
@@ -176,7 +176,7 @@ class PooledThunk(Generic[T]):
         self._thunk = self._pool.acquire(self._computation)
         return self._thunk
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, _exc_type, _exc_val, _exc_tb) -> None:
         """退出上下文，归还thunk"""
         if self._thunk is not None:
             self._pool.release(self._thunk)

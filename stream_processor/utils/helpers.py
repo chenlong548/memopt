@@ -100,11 +100,12 @@ def format_bytes(size: int) -> str:
     Returns:
         str: 格式化字符串
     """
+    size_float = float(size)
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if size < 1024.0:
-            return f"{size:.2f}{unit}"
-        size /= 1024.0
-    return f"{size:.2f}PB"
+        if size_float < 1024.0:
+            return f"{size_float:.2f}{unit}"
+        size_float /= 1024.0
+    return f"{size_float:.2f}PB"
 
 
 def chunk_list(lst: List[T], chunk_size: int) -> List[List[T]]:
@@ -272,8 +273,8 @@ def timeout(seconds: float) -> Callable:
         def wrapper(*args, **kwargs):
             import threading
 
-            result = [None]
-            exception = [None]
+            result: List[Any] = [None]
+            exception: List[Optional[Exception]] = [None]
 
             def target():
                 try:
@@ -341,7 +342,7 @@ class Lazy(Generic[T]):
         if not self._computed:
             self._value = self._func()
             self._computed = True
-        return self._value
+        return self._value  # type: ignore
 
     def is_computed(self) -> bool:
         """是否已计算"""

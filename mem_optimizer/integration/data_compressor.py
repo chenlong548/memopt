@@ -111,14 +111,17 @@ class DataCompressorIntegration:
 
             config = CompressionConfig(algorithm=alg)
 
-            compressed = self._compressor.compress(data, config)
+            if self._compressor:
+                compressed = self._compressor.compress(data, config)
+            else:
+                raise IntegrationError("Compressor not available", module="data_compressor")
 
             block = CompressedMemoryBlock(
                 original_address=address,
                 original_size=len(data),
                 compressed_size=len(compressed.data),
                 compression_ratio=compressed.stats.compression_ratio if compressed.stats else 1.0,
-                algorithm=compressed.algorithm.value,
+                algorithm=compressed.algorithm.value if compressed.algorithm else "unknown",
                 is_compressed=True
             )
 
@@ -151,15 +154,25 @@ class DataCompressorIntegration:
 
             block_info = self._compressed_blocks.get(address)
 
+            if block_info:
+                algorithm = CompressionAlgorithm(block_info.algorithm)
+                original_size = block_info.original_size
+            else:
+                algorithm = CompressionAlgorithm.ZSTD
+                original_size = len(compressed_data) * 2
+            
             compressed = CompressedData(
                 data=compressed_data,
-                algorithm=CompressionAlgorithm(block_info.algorithm) if block_info else CompressionAlgorithm.ZSTD,
-                original_size=block_info.original_size if block_info else len(compressed_data) * 2,
+                algorithm=algorithm,
+                original_size=original_size,
                 compressed_size=len(compressed_data),
-                level=None
-            )
+                level=None  # type: ignore
+            )  # type: ignore
 
-            decompressed = self._compressor.decompress(compressed)
+            if self._compressor:
+                decompressed = self._compressor.decompress(compressed)
+            else:
+                raise IntegrationError("Compressor not available", module="data_compressor")
 
             self._compression_stats['total_decompressed'] += 1
 
@@ -240,7 +253,10 @@ class DataCompressorIntegration:
             return {'available': False}
 
         try:
-            analysis = self._compressor.analyze(data)
+            if self._compressor:
+                analysis = self._compressor.analyze(data)
+            else:
+                return {'available': False}
             return {
                 'available': True,
                 'data_type': analysis.get('data_type'),
@@ -268,7 +284,10 @@ class DataCompressorIntegration:
             return {'available': False}
 
         try:
-            results = self._compressor.benchmark(data, algorithms)
+            if self._compressor:
+                results = self._compressor.benchmark(data, algorithms)
+            else:
+                return {'available': False}
 
             return {
                 'available': True,
@@ -301,7 +320,10 @@ class DataCompressorIntegration:
 
         if self.is_available():
             try:
-                summary = self._compressor.get_stats_summary()
+                if self._compressor:
+                    summary = self._compressor.get_stats_summary()
+                else:
+                    summary = {}
                 stats['compressor_summary'] = summary
             except Exception:
                 pass

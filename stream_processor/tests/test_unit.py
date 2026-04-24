@@ -219,7 +219,7 @@ class TestStream:
         stream.emit(Record(value="a2", key="a"))
         stream.emit(Record(value="b1", key="b"))
 
-        keyed = stream.key_by(lambda r: r.key)
+        keyed = stream.key_by(lambda r: r.key or "default")
         assert "a" in keyed.get_keys()
         assert "b" in keyed.get_keys()
 
@@ -493,7 +493,7 @@ class TestCheckpoint:
         backend = MemoryStateBackend()
 
         backend.put("key1", "value1")
-        assert backend.get("key1").value == "value1"
+        assert backend.get("key1").value == "value1"  # type: ignore
 
         backend.delete("key1")
         assert backend.get("key1") is None

@@ -280,7 +280,7 @@ class KafkaSink(SinkOperator):
         self.set_state(OperatorState.RUNNING)
 
         try:
-            from kafka import KafkaProducer
+            from kafka import KafkaProducer  # type: ignore
             self._producer = KafkaProducer(
                 bootstrap_servers=self._bootstrap_servers
             )

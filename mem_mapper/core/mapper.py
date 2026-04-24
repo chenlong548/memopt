@@ -7,7 +7,7 @@ mem_mapper 核心映射器模块
 import os
 import uuid
 import logging
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 from dataclasses import dataclass
 import time
 
@@ -160,7 +160,7 @@ class MemoryMapper:
                  mode: str = 'readonly',
                  offset: int = 0,
                  size: int = 0,
-                 numa_node: int = -1,
+                 numa_node: Optional[int] = -1,
                  use_huge_pages: Optional[bool] = None,
                  prefetch: bool = True) -> MappedRegion:
         """
@@ -189,7 +189,7 @@ class MemoryMapper:
             # 1. 路径安全验证
             is_valid, validated_path, error_msg = self.path_validator.validate_path(path)
             if not is_valid:
-                sanitized_msg = self.error_sanitizer.sanitize_error_message(error_msg)
+                sanitized_msg = self.error_sanitizer.sanitize_error_message(error_msg or "Invalid path")
                 raise FileError(sanitized_msg, file_path=self.error_sanitizer.sanitize_path(path))
             
             # 使用验证后的路径
@@ -322,7 +322,7 @@ class MemoryMapper:
                        size: int,
                        prot: ProtectionFlags,
                        mapping_type: MappingType,
-                       numa_node: int,
+                       numa_node: Optional[int],
                        use_huge_pages: Optional[bool],
                        file_path: str) -> MappedRegion:
         """
@@ -615,14 +615,15 @@ class MemoryMapper:
         except Exception as e:
             raise MemMapperError(f"Failed to unlock region: {e}")
     
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         """
         获取统计信息
         
         Returns:
             统计信息字典
         """
-        stats = {
+        from typing import Any
+        stats: Dict[str, Any] = {
             'registry': self.registry.get_stats(),
             'lifecycle': self.lifecycle.get_stats(),
         }

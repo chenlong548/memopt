@@ -4,7 +4,7 @@ LRU缓存实现模块
 实现线程安全的LRU（最近最少使用）缓存。
 """
 
-from typing import TypeVar, Generic, Optional, Dict
+from typing import TypeVar, Generic, Optional, Dict, Callable
 from collections import OrderedDict
 import threading
 import time
@@ -173,7 +173,7 @@ class LRUCache(Generic[K, V]):
 
             return True
 
-    def get_or_compute(self, key: K, compute_func: callable) -> V:
+    def get_or_compute(self, key: K, compute_func: Callable[[], V]) -> V:
         """
         获取缓存值，如果不存在则计算并缓存
 

@@ -4,7 +4,7 @@
 实现多级缓存系统，支持不同速度和容量的缓存层级。
 """
 
-from typing import TypeVar, Generic, Optional, List, Callable
+from typing import TypeVar, Generic, Optional, List, Callable, Any
 import threading
 
 K = TypeVar('K')
@@ -49,7 +49,7 @@ class MultiLevelCache(Generic[K, V]):
             'level_hits': {},  # {level_name: hit_count}
         }
 
-    def add_level(self, level_name: str, cache_instance: Generic[K, V]) -> None:
+    def add_level(self, level_name: str, cache_instance: Any) -> None:
         """
         添加缓存层级
 
@@ -83,7 +83,7 @@ class MultiLevelCache(Generic[K, V]):
 
                     # 提升到更快的层级
                     for j in range(i):
-                        faster_level_name, faster_cache = self._levels[j]
+                        _faster_level_name, faster_cache = self._levels[j]
                         faster_cache.put(key, value)
 
                     return value
@@ -101,7 +101,7 @@ class MultiLevelCache(Generic[K, V]):
             value: 缓存值
         """
         with self._lock:
-            for level_name, cache in self._levels:
+            for _level_name, cache in self._levels:
                 cache.put(key, value)
 
     def invalidate(self, key: K) -> None:
@@ -112,13 +112,15 @@ class MultiLevelCache(Generic[K, V]):
             key: 缓存键
         """
         with self._lock:
-            for level_name, cache in self._levels:
+            for _level_name, cache in self._levels:
                 cache.invalidate(key)
 
     def clear(self) -> None:
-        """清空所有缓存层级"""
+        """
+        清空所有缓存层级
+        """
         with self._lock:
-            for level_name, cache in self._levels:
+            for _level_name, cache in self._levels:
                 cache.clear()
 
     def get_or_compute(self, key: K, compute_func: Callable[[], V]) -> V:

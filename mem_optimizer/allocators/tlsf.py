@@ -361,30 +361,47 @@ class TLSFAllocator(AllocatorBase):
             fl, sl = self._mapping_insert(block.size)
             self._block_unlink(block, fl, sl)
 
-            block = self._split_block(block, aligned_size)
-            block.is_free = False
+            if block:
+                block = self._split_block(block, aligned_size)
+                if block:
+                    block.is_free = False
+                    self._allocated[block.address] = block
+                else:
+                    return AllocationResult(
+                        success=False,
+                        error_message="Failed to split block"
+                    )
+            else:
+                return AllocationResult(
+                    success=False,
+                    error_message="Block is None"
+                )
 
-            self._allocated[block.address] = block
+            if block:
+                self.stats.allocation_count += 1
+                self.stats.used_size += block.size
+                self.stats.free_size -= block.size
 
-            self.stats.allocation_count += 1
-            self.stats.used_size += block.size
-            self.stats.free_size -= block.size
+                if self.stats.used_size > self.stats.peak_usage:
+                    self.stats.peak_usage = self.stats.used_size
 
-            if self.stats.used_size > self.stats.peak_usage:
-                self.stats.peak_usage = self.stats.used_size
+                allocation_time = time.time() - start_time
 
-            allocation_time = time.time() - start_time
-
-            return AllocationResult(
-                success=True,
-                address=block.address,
-                size=request.size,
-                actual_size=block.size,
-                allocator_type=self.allocator_type,
-                numa_node=request.numa_node,
-                fragmentation=(block.size - request.size) / block.size if block.size > 0 else 0,
-                allocation_time=allocation_time
-            )
+                return AllocationResult(
+                    success=True,
+                    address=block.address,
+                    size=request.size,
+                    actual_size=block.size,
+                    allocator_type=self.allocator_type,
+                    numa_node=request.numa_node,
+                    fragmentation=(block.size - request.size) / block.size if block.size > 0 else 0,
+                    allocation_time=allocation_time
+                )
+            else:
+                return AllocationResult(
+                    success=False,
+                    error_message="Block is None"
+                )
 
         except Exception as e:
             return AllocationResult(

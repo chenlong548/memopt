@@ -509,9 +509,9 @@ class TestBufferPool(unittest.TestCase):
         """测试获取和释放缓冲区"""
         buffer = self.pool.acquire()
         self.assertIsInstance(buffer, bytearray)
-        self.assertEqual(len(buffer), 1024)
-
-        self.pool.release(buffer)
+        if buffer is not None:
+            self.assertEqual(len(buffer), 1024)
+            self.pool.release(buffer)
 
         stats = self.pool.get_stats()
         self.assertEqual(stats['total_acquisitions'], 1)
@@ -680,7 +680,7 @@ class TestDataValidator(unittest.TestCase):
     def test_validate_invalid_type(self):
         """测试验证无效类型"""
         with self.assertRaises(ValidationError):
-            self.validator.validate("string data")
+            self.validator.validate("string data")  # type: ignore
 
     def test_validate_size_limits(self):
         """测试大小限制"""

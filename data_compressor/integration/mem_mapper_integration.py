@@ -76,13 +76,17 @@ class MemMapperIntegration:
             # 写入文件
             self._write_compressed_file(output_path, compressed)
 
-            logger.info(
-                f"Mapped region compressed: {compressed.stats.original_size} -> "
-                f"{compressed.stats.compressed_size} bytes "
-                f"({compressed.stats.compression_ratio:.2f}x)"
-            )
-
-            return compressed.stats
+            # 确保 stats 不为 None
+            if compressed.stats:
+                logger.info(
+                    f"Mapped region compressed: {compressed.stats.original_size} -> "
+                    f"{compressed.stats.compressed_size} bytes "
+                    f"({compressed.stats.compression_ratio:.2f}x)"
+                )
+                return compressed.stats
+            else:
+                logger.error("Compression stats is None")
+                raise CompressionError("Compression stats is None")
 
         except Exception as e:
             logger.error(f"Failed to compress mapped region: {e}")

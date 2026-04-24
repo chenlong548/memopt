@@ -144,7 +144,7 @@ class TracemallocSampler(SoftwareSampler):
         metrics['tracemalloc_overhead'] = stats
 
         # 如果有前一个快照，计算差异
-        if self._previous_snapshot is not None:
+        if self._snapshot is not None and self._previous_snapshot is not None:
             diff = self._snapshot.compare_to(self._previous_snapshot, 'traceback')
 
             total_diff_size = 0
@@ -167,12 +167,13 @@ class TracemallocSampler(SoftwareSampler):
             metrics['allocation_diff_count'] = total_diff_count
 
         # 获取top分配
-        top_stats = self._snapshot.statistics('traceback')[:10]
-        self._top_allocations = [
-            (str(stat.traceback[0]) if stat.traceback else 'unknown',
-             stat.size, stat.count)
-            for stat in top_stats
-        ]
+        if self._snapshot is not None:
+            top_stats = self._snapshot.statistics('traceback')[:10]
+            self._top_allocations = [
+                (str(stat.traceback[0]) if stat.traceback else 'unknown',
+                 stat.size, stat.count)
+                for stat in top_stats
+            ]
 
         metrics['top_allocation_count'] = len(self._top_allocations)
 
@@ -412,7 +413,7 @@ class EBPFSampler(SoftwareSampler):
 
         # 检查bcc是否可用
         try:
-            from bcc import BPF
+            from bcc import BPF  # type: ignore
             return True
         except ImportError:
             return False
@@ -434,7 +435,7 @@ class EBPFSampler(SoftwareSampler):
     def _load_bpf_program(self):
         """加载eBPF程序"""
         try:
-            from bcc import BPF
+            from bcc import BPF  # type: ignore
 
             # 默认的内存追踪程序
             bpf_program = self._bpf_program or self._get_default_bpf_program()
@@ -480,16 +481,17 @@ class EBPFSampler(SoftwareSampler):
     def _handle_event(self, cpu, data, size):
         """处理eBPF事件"""
         try:
-            from bcc import BPF
+            from bcc import BPF  # type: ignore
 
-            event = self._bpf['events'].event(data)
-            self._events.append({
-                'pid': event.pid,
-                'addr': event.addr,
-                'size': event.size,
-                'timestamp': event.timestamp,
-                'comm': event.comm.decode('utf-8', errors='ignore'),
-            })
+            if self._bpf:
+                event = self._bpf['events'].event(data)
+                self._events.append({
+                    'pid': event.pid,
+                    'addr': event.addr,
+                    'size': event.size,
+                    'timestamp': event.timestamp,
+                    'comm': event.comm.decode('utf-8', errors='ignore'),
+                })
         except Exception:
             pass
 

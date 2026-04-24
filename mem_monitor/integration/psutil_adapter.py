@@ -136,7 +136,7 @@ class PsutilAdapter:
         Returns:
             Dict: 内存信息字典
         """
-        if not self._available:
+        if not self._available or self._process is None or self._psutil is None:
             return {}
 
         try:
@@ -170,7 +170,7 @@ class PsutilAdapter:
         Returns:
             Optional[ProcessMemoryInfo]: 进程内存信息
         """
-        if not self._available:
+        if not self._available or self._psutil is None:
             return None
 
         try:
@@ -178,6 +178,9 @@ class PsutilAdapter:
                 process = self._process
             else:
                 process = self._psutil.Process(pid)
+
+            if process is None:
+                return None
 
             mem_info = process.memory_info()
             mem_percent = process.memory_percent()
@@ -194,10 +197,10 @@ class PsutilAdapter:
                 percent=mem_percent,
             )
 
-        except self._psutil.NoSuchProcess:
+        except getattr(self._psutil, 'NoSuchProcess', Exception):
             logger.debug(f"Process {pid} not found")
             return None
-        except self._psutil.AccessDenied:
+        except getattr(self._psutil, 'AccessDenied', Exception):
             logger.debug(f"Access denied to process {pid}")
             return None
         except Exception as e:
@@ -211,7 +214,7 @@ class PsutilAdapter:
         Returns:
             Optional[SystemMemoryInfo]: 系统内存信息
         """
-        if not self._available:
+        if not self._available or self._psutil is None:
             return None
 
         try:
@@ -244,7 +247,7 @@ class PsutilAdapter:
         Returns:
             List[ProcessMemoryInfo]: 进程列表
         """
-        if not self._available:
+        if not self._available or self._psutil is None:
             return []
 
         processes = []
@@ -279,7 +282,7 @@ class PsutilAdapter:
         Returns:
             Dict[int, List[int]]: CPU到内存节点的映射
         """
-        if not self._available:
+        if not self._available or self._process is None:
             return {}
 
         try:
@@ -287,9 +290,11 @@ class PsutilAdapter:
             cpu_affinity = self._process.cpu_affinity()
 
             # 简化实现：假设所有CPU都可以访问所有内存
-            return {cpu: [0] for cpu in cpu_affinity}
+            if cpu_affinity is not None:
+                return {cpu: [0] for cpu in cpu_affinity}
+            return {}
 
-        except (AttributeError, self._psutil.AccessDenied) as e:
+        except (AttributeError, getattr(self._psutil, 'AccessDenied', Exception)) as e:
             logger.debug(f"Failed to get CPU affinity: {e}")
             return {}
         except Exception as e:
@@ -303,7 +308,7 @@ class PsutilAdapter:
         Returns:
             Dict: IO统计信息
         """
-        if not self._available:
+        if not self._available or self._process is None:
             return {}
 
         try:
@@ -316,7 +321,7 @@ class PsutilAdapter:
                 'write_bytes': io_counters.write_bytes,
             }
 
-        except (AttributeError, self._psutil.AccessDenied) as e:
+        except (AttributeError, getattr(self._psutil, 'AccessDenied', Exception)) as e:
             logger.debug(f"Failed to get IO stats: {e}")
             return {}
         except Exception as e:
@@ -330,8 +335,9 @@ class PsutilAdapter:
         Returns:
             Dict: 统计信息
         """
+        system_memory_info = self.get_system_memory_info()
         return {
             'available': self._available,
             'process_memory': self.get_memory_info(),
-            'system_memory': self.get_system_memory_info().to_dict() if self.is_available() else {},
+            'system_memory': system_memory_info.to_dict() if system_memory_info else {},
         }
