@@ -5,7 +5,7 @@ stream_processor 恢复机制
 """
 
 from typing import Optional, Dict, Any, List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import time
 import logging
 
@@ -29,7 +29,7 @@ class RecoveryResult:
 
     snapshot_id: Optional[str] = None
 
-    recovered_operators: List[str] = []
+    recovered_operators: List[str] = field(default_factory=list)
 
     recovery_time_ms: float = 0.0
 
