@@ -108,3 +108,4 @@ data_compressor/PERFORMANCE.md
 data_compressor/TESTING.md
 mem_mapper/tests/test_comprehensive.py
 mem_mapper/tests/test_visual.py
+lazy_evaluator/integration/stream_adapter.py
